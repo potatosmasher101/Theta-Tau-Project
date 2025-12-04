@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulated Weather App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #74a0e0 0%, #a6c1ee 100%); /* Simpler blue gradient */
+            min-height: 100vh;
+        }
+        .weather-card {
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.95); /* Less transparent */
+            transition: all 0.3s ease-in-out;
+            transform-origin: center;
+        }
+        .icon-svg {
+            width: 80px;
+            height: 80px;
+            fill: currentColor;
+        }
+        .search-button {
+            transition: background-color 0.2s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #weather-result {
+            animation: fadeIn 0.5s ease-out;
+        }
+        /* Custom styling for a dropdown */
+        #city-select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='currentColor'%3e%3cpath d='M7 7l3 3 3-3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+    <div class="w-full max-w-md">
+        <!-- Weather Card Container -->
+        <div class="weather-card p-8 rounded-xl shadow-2xl border border-white/30">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+                <span class="text-blue-600">Simulated</span> Weather
+            </h1>
+
+            <!-- Message to user explaining the simulation -->
+            <div id="api-note" class="bg-blue-100 border-l-4 border-blue-500 text-blue-800 p-3 mb-4 rounded-md text-sm">
+                <p class="font-semibold mb-1">💡 No API Required!</p>
+                <p>This app shows fun, pre-set weather conditions instead of live data, so you don't need an API key.</p>
+            </div>
+
+            <!-- City Selection Dropdown -->
+            <div class="mb-6">
+                <label for="city-select" class="block text-sm font-medium text-gray-700 mb-2">Select a City:</label>
+                <select
+                    id="city-select"
+                    class="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition duration-200 shadow-inner bg-white"
+                >
+                    <option value="London">London, UK</option>
+                    <option value="Tokyo">Tokyo, Japan</option>
+                    <option value="New York">New York, USA</option>
+                    <option value="Dubai">Dubai, UAE</option>
+                    <option value="Sydney">Sydney, Australia</option>
+                </select>
+            </div>
+
+            <!-- Error/Loading Message -->
+            <div id="message" class="text-center text-red-600 font-medium mb-4 min-h-[1.5rem]"></div>
+
+            <!-- Weather Result Display -->
+            <div id="weather-result">
+                <div class="text-center mb-6">
+                    <div id="weather-icon-container" class="flex justify-center mb-2 text-blue-500">
+                        <!-- SVG Icon will be injected here -->
+                    </div>
+                    <p id="city-display" class="text-4xl font-bold text-gray-800">London, UK</p>
+                    <p id="description-display" class="text-xl text-gray-600 capitalize">Overcast Clouds</p>
+                </div>
+
+                <div class="flex justify-center items-end mb-4">
+                    <p id="temperature-display" class="text-7xl font-light text-gray-900 leading-none">14</p>
+                    <span class="text-4xl font-light text-gray-600 ml-1 mb-2">°C</span>
+                </div>
+
+                <div class="flex justify-around text-center border-t border-gray-200 pt-4 mt-4">
+                    <div class="flex flex-col items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2-12h4c.55 0 1 .45 1 1s-.45 1-1 1h-4c-.55 0-1-.45-1-1s.45-1 1-1zm0 3h4c.55 0 1 .45 1 1s-.45 1-1 1h-4c-.55 0-1-.45-1-1s.45-1 1-1zm0 3h4c.55 0 1 .45 1 1s-.45 1-1 1h-4c-.55 0-1-.45-1-1s.45-1 1-1z"/>
+                        </svg>
+                        <p id="humidity-display" class="text-lg font-semibold text-gray-800 mt-1">75%</p>
+                        <p class="text-sm text-gray-500">Humidity</p>
+                    </div>
+
+                    <div class="flex flex-col items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M11 16h2v-4h4v-2h-4V6h-2v4H7v2h4v4zM2.01 12C2.01 7.45 5.4 3.73 9.88 3.05V1L12 3.5 14.12 1v2.05C18.6 3.73 22 7.45 22 12c0 4.97-4.03 9-9 9s-9-4.03-9-9zm10 7c3.87 0 7-3.13 7-7s-3.13-7-7-7-7 3.13-7 7 3.13 7 7 7z"/>
+                        </svg>
+                        <p id="wind-speed-display" class="text-lg font-semibold text-gray-800 mt-1">5 m/s</p>
+                        <p class="text-sm text-gray-500">Wind Speed</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Weather Card -->
+    </div>
+
+    <script>
+        // --- SIMULATED WEATHER DATA (No API required) ---
+        const SIMULATED_DATA = {
+            "London": { temp: 14, desc: "Overcast Clouds", humidity: 75, wind: 5, icon: '04d' },
+            "Tokyo": { temp: 22, desc: "Sunny and Clear", humidity: 60, wind: 3, icon: '01d' },
+            "New York": { temp: 8, desc: "Light Snow", humidity: 85, wind: 8, icon: '13d' },
+            "Dubai": { temp: 35, desc: "Clear Sky", humidity: 30, wind: 2, icon: '01d' },
+            "Sydney": { temp: 28, desc: "Scattered Showers", humidity: 70, wind: 10, icon: '09d' },
+        };
+        // -------------------------------------------------
+
+
+        // DOM elements
+        const citySelect = document.getElementById('city-select'); // Changed from input to select
+        const messageElement = document.getElementById('message');
+        const weatherResult = document.getElementById('weather-result');
+        const apiNote = document.getElementById('api-note'); 
+
+        const cityDisplay = document.getElementById('city-display');
+        const descriptionDisplay = document.getElementById('description-display');
+        const temperatureDisplay = document.getElementById('temperature-display');
+        const humidityDisplay = document.getElementById('humidity-display');
+        const windSpeedDisplay = document.getElementById('wind-speed-display');
+        const iconContainer = document.getElementById('weather-icon-container');
+
+        // Helper function to convert icon code to a readable icon SVG
+        function getWeatherIcon(iconCode) {
+            const iconMap = {
+                // Clear
+                '01d': '<svg xmlns="http://www.w3.org/2000/svg" class="icon-svg text-yellow-500" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5" /><path d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>',
+                '01n': '<svg xmlns="http://www.w3.org/2000/svg" class="icon-svg text-gray-700" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 009 9 9.998 9.998 0 01-9-4.472A9.996 9.996 0 013 12a9 9 0 009-9z"/></svg>',
+                // Clouds (used for Overcast)
+                '04d': '<svg xmlns="http://www.w3.org/2000/svg" class="icon-svg text-gray-600" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4c-3.72 0-6.81 2.91-7 6.6C2.28 11.23 1 13.59 1 16c0 3.31 2.69 6 6 6h12c2.76 0 5-2.24 5-5 0-2.64-2.08-4.83-4.65-5.12z"/></svg>',
+                // Rain/Drizzle (used for Showers)
+                '09d': '<svg xmlns="http://www.w3.org/2000/svg" class="icon-svg text-blue-500" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 18H5.2c-2.2 0-4-1.8-4-4 0-2.2 1.8-4 4-4h.8C6.5 7.4 9 5 12 5c3.2 0 5.8 2.3 6.3 5.4.3-.2.7-.4 1.2-.4 1.4 0 2.5 1.1 2.5 2.5s-1.1 2.5-2.5 2.5h-2.1l-.9 2.1c-.2.6-.7 1.1-1.3 1.1zm-4.7-6.2l-2.8 5.7c-.1.3-.4.4-.7.3s-.4-.4-.3-.7l2.8-5.7c.1-.3.4-.4.7-.3s.4.4.3.7zM9.5 19.3l-2.8 5.7c-.1.3-.4.4-.7.3s-.4-.4-.3-.7l2.8-5.7c.1-.3.4-.4.7-.3s.4.4.3.7zM15.5 14.3l-2.8 5.7c-.1.3-.4.4-.7.3s-.4-.4-.3-.7l2.8-5.7c.1-.3.4-.4.7-.3s.4.4.3.7z"/></svg>',
+                // Snow
+                '13d': '<svg xmlns="http://www.w3.org/2000/svg" class="icon-svg text-blue-300" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4c-3.72 0-6.81 2.91-7 6.6C2.28 11.23 1 13.59 1 16c0 3.31 2.69 6 6 6h12c2.76 0 5-2.24 5-5 0-2.64-2.08-4.83-4.65-5.12zM11 18H9v-2h2v2zm4 0h-2v-2h2v2zm2-4h-2v-2h2v2zm-4 0h-2v-2h2v2zM7 14H5v-2h2v2zm0 4H5v-2h2v2zM17 18h-2v-2h2v2z"/></svg>',
+            };
+            return iconMap[iconCode] || ''; // Fallback to empty string
+        }
+
+        // Function to display simulated weather data
+        function displaySimulatedWeather(cityKey) {
+            const data = SIMULATED_DATA[cityKey];
+
+            if (!data) {
+                // Should not happen with a dropdown, but good practice
+                messageElement.textContent = `Error: Data for ${cityKey} is missing.`;
+                return;
+            }
+            
+            messageElement.textContent = "";
+            
+            // Update DOM with static data
+            cityDisplay.textContent = `${cityKey}, ${citySelect.options[citySelect.selectedIndex].text.split(', ')[1] || 'Simulated'}`;
+            descriptionDisplay.textContent = data.desc;
+            temperatureDisplay.textContent = data.temp;
+            humidityDisplay.textContent = `${data.humidity}%`;
+            windSpeedDisplay.textContent = `${data.wind} m/s`;
+            iconContainer.innerHTML = getWeatherIcon(data.icon); 
+
+            weatherResult.classList.remove('hidden');
+        }
+
+        // Event listener for the city selection change
+        citySelect.addEventListener('change', (event) => {
+            const selectedCity = event.target.value;
+            displaySimulatedWeather(selectedCity);
+        });
+
+        // Initialize with the default selected city on load (London)
+        window.addEventListener('load', () => {
+            displaySimulatedWeather(citySelect.value); 
+        });
+
+    </script>
+</body>
+</html>
